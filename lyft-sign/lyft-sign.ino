@@ -21,6 +21,12 @@ const int btn2 = A3;
 const int btn3 = A4;
 const int btn4 = A5;
 
+// button LEDs
+const int led1 = 2;
+const int led2 = 7;
+const int led3 = 8;
+const int led4 = 13;
+
 int btn1Val = 0;
 int btn2Val = 0;
 int btn3Val = 0;
@@ -46,10 +52,10 @@ const int lyftLogoPin = 12;
 const int carPin = 4;
 
 // for color cycling with fake interrupts
-int R = 0;
-int G = 0;
-int B = 256;
-int cycle_incrementer = 1;
+static int R = 0;
+static int G = 0;
+static int B = 250;
+static int cycle_incrementer = 1;
 
 void setup() {
   pinMode(btn1, INPUT_PULLUP);
@@ -64,6 +70,15 @@ void setup() {
   pinMode(btn4, INPUT_PULLUP);
   debouncer4.attach(btn4);
   debouncer4.interval(DEBOUNCE_TIME);
+
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
+  pinMode(led4, OUTPUT);
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+  digitalWrite(led3, LOW);
+  digitalWrite(led4, LOW);
 
   pinMode(skylineRedPin, OUTPUT);
   pinMode(skylineGreenPin, OUTPUT);
@@ -98,12 +113,27 @@ void clearLights() {
   setColor("landmarks", 0, 0, 0);
 }
 
+// turn off all other lights other than the ones that should be on
+void turnOffOthers(int i) {
+  if (i == 1) {
+    digitalWrite(carPin, LOW);
+    setColor("landmarks", 0, 0, 0);
+    setColor("skyline", 0, 0, 0);
+  } else if (i == 2) {
+    setColor("landmarks", 0, 0, 0);
+    setColor("skyline", 0, 0, 0);
+  } else if (i == 3) {
+    setColor("landmarks", 0, 0, 0);
+  }
+}
+
 // cycle rainbow colors!
 // interrupt every 50ms to check number of buttons pressed
 void cycleColors() {
   int interval;
+
   // fade from blue to violet
-  if (R < 256 && G == 0 && B == 256) {
+  if (R < 250 && G == 0 && B == 250) {
     while (cycle_incrementer <= 25) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (R < interval) {
@@ -116,8 +146,8 @@ void cycleColors() {
     }
   }
   // fade from violet to red
-  if (R == 256 && G == 0 && B > 0) {
-    while (cycle_incrementer > 0) {
+  if (R == 250 && G == 0 && B > 0) {
+    while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (B > interval) {
         analogWrite(skylineBluePin, B);
@@ -130,7 +160,7 @@ void cycleColors() {
   }
 
   // fade from red to yellow
-  if (R == 256 && G < 256 && B == 0) {
+  if (R == 250 && G < 250 && B == 0) {
     while (cycle_incrementer <= 25) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (G < interval) {
@@ -144,8 +174,8 @@ void cycleColors() {
   }
 
   // fade from yellow to green
-  if (R > 0 && G == 256 && B == 0) {
-    while (cycle_incrementer > 0) {
+  if (R > 0 && G == 250 && B == 0) {
+    while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (R > interval) {
         analogWrite(skylineRedPin, R);
@@ -158,7 +188,7 @@ void cycleColors() {
   }
 
   // fade from green to teal
-  if (R == 0 && G == 256 && B < 256) {
+  if (R == 0 && G == 250 && B < 250) {
     while (cycle_incrementer <= 25) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (B < interval) {
@@ -172,8 +202,8 @@ void cycleColors() {
   }
 
   // fade from teal to blue
-  if (R == 0 && G > 0 && B == 256) {
-    while (cycle_incrementer > 0) {
+  if (R == 0 && G > 0 && B == 250) {
+    while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (G > interval) {
         analogWrite(skylineGreenPin, G);
@@ -202,31 +232,57 @@ void landmarks() {
   setColor("landmarks", 0, 0, 255); // blue
 }
 
-/* Lyft logo */
+// Lyft logo
 void turnOnOne() {
   lyftLogo();
 }
 
-/* Lyft logo and cars */
+// Lyft logo and cars
 void turnOnTwo() {
   lyftLogo();
   cars();
 }
 
-/* Lyft logo, cars and skyline */
+// Lyft logo, cars and skyline
 void turnOnThree() {
   lyftLogo();
   cars();
   skyline();
 }
 
-/* Lyft logo, cars, skyline, special buildings */
+// Lyft logo, cars, skyline, special buildings
 void turnOnFour() {
   lyftLogo();
   cars();
-  skyline();
   landmarks();
   cycleColors();
+}
+
+// match button LEDs with button presses
+void writeButtonLEDs() {
+  if (btn1Val == 1) {
+    digitalWrite(led1, HIGH);
+  } else {
+    digitalWrite(led1, LOW);
+  }
+
+  if (btn2Val == 1) {
+    digitalWrite(led2, HIGH);
+  } else {
+    digitalWrite(led2, LOW);
+  }
+
+  if (btn3Val == 1) {
+    digitalWrite(led3, HIGH);
+  } else {
+    digitalWrite(led3, LOW);
+  }
+
+  if (btn4Val == 1) {
+    digitalWrite(led4, HIGH);
+  } else {
+    digitalWrite(led4, LOW);
+  }
 }
 
 void loop() {
@@ -239,6 +295,8 @@ void loop() {
   btn3Val = debouncer3.read();
   btn4Val = debouncer4.read();
 
+  writeButtonLEDs();
+
   buttonsPressed = 4 - (btn1Val + btn2Val + btn3Val + btn4Val);
   switch (buttonsPressed) {
     case 0:
@@ -246,14 +304,17 @@ void loop() {
       delay(CYCLE_DELAY);
       break;
     case 1:
+      turnOffOthers(1);
       turnOnOne();
       delay(CYCLE_DELAY);
       break;
     case 2:
+      turnOffOthers(2);
       turnOnTwo();
       delay(CYCLE_DELAY);
       break;
     case 3:
+      turnOffOthers(3);
       turnOnThree();
       delay(CYCLE_DELAY);
       break;
