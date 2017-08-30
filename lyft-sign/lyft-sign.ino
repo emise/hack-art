@@ -138,7 +138,7 @@ void cycleColors() {
         delay(1);
         G++;
       }
-      cycle_incrementer--;
+      cycle_incrementer++;
       return;
     }
   }
@@ -166,7 +166,7 @@ void cycleColors() {
         delay(1);
         B++;
       }
-      cycle_incrementer--;
+      cycle_incrementer++;
       return;
     }
   }
