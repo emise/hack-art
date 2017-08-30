@@ -15,6 +15,7 @@
 
 const int DEBOUNCE_TIME = 5;
 const int CYCLE_DELAY = 50;
+const int INTERRUPT_INTERVAL = 5;
 
 const int btn1 = A2;
 const int btn2 = A3;
@@ -54,8 +55,8 @@ const int carPin = 4;
 // for color cycling with fake interrupts
 static int R = 0;
 static int G = 0;
-static int B = 250;
-static int cycle_incrementer = 1;
+static int B = INTERRUPT_INTERVAL * CYCLE_DELAY;
+static int cycle_incrementer = 0;
 
 void setup() {
   pinMode(btn1, INPUT_PULLUP);
@@ -131,10 +132,11 @@ void turnOffOthers(int i) {
 // interrupt every 50ms to check number of buttons pressed
 void cycleColors() {
   int interval;
+  int max = INTERRUPT_INTERVAL * CYCLE_DELAY;
 
   // fade from blue to violet
-  if (R < 250 && G == 0 && B == 250) {
-    while (cycle_incrementer <= 25) {
+  if (R < max && G == 0 && B == max) {
+    while (cycle_incrementer <= INTERRUPT_INTERVAL) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (R < interval) {
         analogWrite(skylineRedPin, R);
@@ -146,7 +148,7 @@ void cycleColors() {
     }
   }
   // fade from violet to red
-  if (R == 250 && G == 0 && B > 0) {
+  if (R == max && G == 0 && B > 0) {
     while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (B > interval) {
@@ -160,8 +162,8 @@ void cycleColors() {
   }
 
   // fade from red to yellow
-  if (R == 250 && G < 250 && B == 0) {
-    while (cycle_incrementer <= 25) {
+  if (R == max && G < max && B == 0) {
+    while (cycle_incrementer <= INTERRUPT_INTERVAL) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (G < interval) {
         analogWrite(skylineGreenPin, G);
@@ -174,7 +176,7 @@ void cycleColors() {
   }
 
   // fade from yellow to green
-  if (R > 0 && G == 250 && B == 0) {
+  if (R > 0 && G == max && B == 0) {
     while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (R > interval) {
@@ -188,8 +190,8 @@ void cycleColors() {
   }
 
   // fade from green to teal
-  if (R == 0 && G == 250 && B < 250) {
-    while (cycle_incrementer <= 25) {
+  if (R == 0 && G == max && B < max) {
+    while (cycle_incrementer <= INTERRUPT_INTERVAL) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (B < interval) {
         analogWrite(skylineBluePin, B);
@@ -202,7 +204,7 @@ void cycleColors() {
   }
 
   // fade from teal to blue
-  if (R == 0 && G > 0 && B == 250) {
+  if (R == 0 && G > 0 && B == max) {
     while (cycle_incrementer >= 0) {
       interval = cycle_incrementer * CYCLE_DELAY;
       while (G > interval) {
